@@ -162,7 +162,7 @@ if audio_input:
                 tmp_file_path = tmp_file.name
             try:
                 with open(tmp_file_path, "rb") as audio_file:
-                    transcript = client.audio.transcriptions.create (
+                    transcript  = client.audio.transcriptions.create (
                         model="whisper-large-v3-turbo",
                         file=os.path.basename(tmp_file_path),
                         response_format="text"
