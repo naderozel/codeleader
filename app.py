@@ -151,49 +151,49 @@ if user_input:
         st.write(reply)                 
                  
     st.session_state.message_history.append({"role": "assistant", "content": reply})\
-
-audio_input = st.audio_input("Record your message...")  
-
-
-if audio_input:
-    if st.button("send audio"):
-        with st.spinner("converting audio to text..."):
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
-                tmp_file.write(audio_input.read())
-                tmp_file_path = tmp_file.name
-            try:
-                with open(tmp_file_path, "rb") as audio_file:
-                    transcript = client.audio.transcriptions.create(
-                    model="whisper-large-v3-turbo",
-                    file=open(tmp_file_path, "rb"),  # open the file in binary mode
-                    response_format="text"
-)
-
-     
-
-
-                    
-
-            finally:
-                os.unlink(tmp_file_path)
-        if not transcript or len(transcript.strip()) < 2:
-            st.session_state.message_history.append({"role": "assistant", "content":transcript})
-            with st.chat_message("user"):
-                st.write(f"{transcript}")
-            with st.chat_message("assistant"):
-                with st.spinner("Thinking..."):
-                    try:
-                        messages = [{"role": "system", "content": "your are a helpful assistant"}]
-                        for msg in st.session_state.message_history:
-                            messages.append({"role": msg['role'], "content": msg["content"]})
-                        response = client.chat.completions.create(
-                            model="openai/gpt-oss-120b",
-                            messages=messages,
-                            max_tokens=500,
-                            temperature=0.7
-                        )
-                        answer = response.choices[0].message.content
-                    except Exception as e:
-                        answer = e
-                    
+    
+    audio_input = st.audio_input("Record your message...")  
+    
+    
+    if audio_input:
+        if st.button("send audio"):
+            with st.spinner("converting audio to text..."):
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+                    tmp_file.write(audio_input.read())
+                    tmp_file_path = tmp_file.name
+                try:
+                    with open(tmp_file_path, "rb") as audio_file:
+                        transcript = client.audio.transcriptions.create(
+                        model="whisper-large-v3-turbo",
+                        file=open(tmp_file_path, "rb"),  # open the file in binary mode
+                        response_format="text"
+    )
+    
+         
+    
+    
+                        
+    
+                finally:
+                    os.unlink(tmp_file_path)
+            if not transcript or len(transcript.strip()) < 2:
+                st.session_state.message_history.append({"role": "assistant", "content":transcript})
+                with st.chat_message("user"):
+                    st.write(f"{transcript}")
+                with st.chat_message("assistant"):
+                    with st.spinner("Thinking..."):
+                        try:
+                            messages = [{"role": "system", "content": "your are a helpful assistant"}]
+                            for msg in st.session_state.message_history:
+                                messages.append({"role": msg['role'], "content": msg["content"]})
+                            response = client.chat.completions.create(
+                                model="openai/gpt-oss-120b",
+                                messages=messages,
+                                max_tokens=500,
+                                temperature=0.7
+                            )
+                            answer = response.choices[0].message.content
+                        except Exception as e:
+                            answer = e
+                        
                     
