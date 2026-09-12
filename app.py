@@ -87,10 +87,10 @@ SYSTEM_PROMPT = f"""
 """
 
 Groq_model = "openai/gpt-oss-120b"
-
 @st.cache_resource
 def get_client():
-    return Groq(api_key="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"")
+    return Groq(api_key=st.secrets["GROQ_API_KEY"])
+
 
 
 client = get_client()
