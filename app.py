@@ -152,7 +152,7 @@ if user_input:
                  
     st.session_state.message_history.append({"role": "assistant", "content": reply})\
 
-audio_input = st.audio_input("Record your message...")  
+
 
 
 if audio_input:
