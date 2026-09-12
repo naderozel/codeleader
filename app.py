@@ -110,6 +110,7 @@ st.set_page_config(
 
 
 st.title("🎓CODELEADER")
+audio_input = st.audio_input("Record your message...")
 user_input = st.chat_input("Type your message here...") 
 
 if "message_history" not in st.session_state:
