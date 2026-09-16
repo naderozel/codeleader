@@ -91,7 +91,7 @@ Groq_model = "openai/gpt-oss-120b"
 @st.cache_resource
 def get_client():
     # Prefer environment variable or secrets safely
-    api_key = os.getenv("GROQ_API_KEY", st.secrets.get("GROQ_API_KEY", None))
+    api_key = st.secrets.get("GROQ_API_KEY", None)
     if not api_key:
         st.error("❌ GROQ_API_KEY is missing. Please set it in Streamlit secrets or environment variables.")
         st.stop()
