@@ -3,9 +3,8 @@ from groq import Groq
 import tempfile
 import os
 
-ACADEMY_INFO = """
-
-اسم الأكاديمية: أكاديمية كود ليدر - CODEleader Academy
+# === Configuration ===
+ACADEMY_INFO = """ر - CODEleader Academy
 الشعار: أكثر من مجرد برمجة، نحن نبني قادة المستقبل
 
 === الاعتمادات والفلسفة ===
@@ -57,7 +56,7 @@ ACADEMY_INFO = """
 - واتساب 2: https://wa.me/201030115464
 - البريد الإلكتروني: info@codeleadereg.com
 - فيسبوك: facebook.com/CodeLeaderAcademy
-"""
+""" # keep your academy info here
 
 SYSTEM_PROMPT = f"""
 
@@ -87,22 +86,30 @@ SYSTEM_PROMPT = f"""
 """
 
 Groq_model = "openai/gpt-oss-120b"
+
+# === Initialize Groq Client ===
 @st.cache_resource
 def get_client():
-    return Groq(api_key=st.secrets["GROQ_API_KEY"])
-
-
+    # Prefer environment variable or secrets safely
+    api_key = os.getenv("GROQ_API_KEY", st.secrets.get("GROQ_API_KEY", None))
+    if not api_key:
+        st.error("❌ GROQ_API_KEY is missing. Please set it in Streamlit secrets or environment variables.")
+        st.stop()
+    return Groq(api_key=api_key)
 
 client = get_client()
 
+# === Streamlit UI ===
 st.set_page_config(page_title="🎓CODELEADER", page_icon="🎓", layout="centered")
 st.title("🎓CODELEADER")
 
-# Chat history
+# Chat input
+user_input = st.chat_input("Type your message here...")
+audio_input = st.audio_input("Record your message...")
+
 if "message_history" not in st.session_state:
     st.session_state.message_history = []
 
-# Clear chat
 if st.sidebar.button("🗑️ Clear Chat"):
     st.session_state.message_history = []
     st.rerun()
@@ -112,14 +119,9 @@ for message in st.session_state.message_history:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# Text input
-user_input = st.chat_input("Type your message here...")
-
+# === Text Chat Handling ===
 if user_input:
     st.session_state.message_history.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.write(user_input)
-
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
@@ -129,18 +131,16 @@ if user_input:
                     max_tokens=512,
                 )
                 reply = response.choices[0].message.content
-            except Exception as e:
+            except Exception:
                 reply = (
-                    "ليس لدي معلومة حول هذا الموضوع، يُرجى التواصل معنا مباشرة عبر واتساب\n\n"
+                    "ليس لدي معلومه حول هذا الموضوع، يُرجى التواصل معنا مباشرة عبر واتساب:\n"
                     "📲 https://wa.me/201284447141\n"
                     "📲 https://wa.me/201030115464"
                 )
         st.write(reply)
-        st.session_state.message_history.append({"role": "assistant", "content": reply})
+    st.session_state.message_history.append({"role": "assistant", "content": reply})
 
-# Audio input
-audio_input = st.audio_input("Record your message...")
-
+# === Audio Handling ===
 if audio_input and st.button("Send Audio"):
     with st.spinner("Converting audio to text..."):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
@@ -152,30 +152,28 @@ if audio_input and st.button("Send Audio"):
                 transcript = client.audio.transcriptions.create(
                     model="whisper-large-v3-turbo",
                     file=audio_file,
-                    response_format="text"
+                    response_format="text",
                 )
         finally:
             os.unlink(tmp_file_path)
 
-    # Show transcript
-    st.session_state.message_history.append({"role": "user", "content": transcript})
-    with st.chat_message("user"):
-        st.write(transcript)
+    if transcript and len(transcript.strip()) > 2:
+        st.session_state.message_history.append({"role": "user", "content": transcript})
+        with st.chat_message("user"):
+            st.write(transcript)
 
-    # Generate assistant reply
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            try:
-                messages = [{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.message_history
-                response = client.chat.completions.create(
-                    model=Groq_model,
-                    messages=messages,
-                    max_tokens=500,
-                    temperature=0.7
-                )
-                answer = response.choices[0].message.content
-            except Exception as e:
-                answer = f"حدث خطأ أثناء معالجة الصوت: {e}"
-
-        st.write(answer)
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                try:
+                    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.message_history
+                    response = client.chat.completions.create(
+                        model=Groq_model,
+                        messages=messages,
+                        max_tokens=500,
+                        temperature=0.7,
+                    )
+                    answer = response.choices[0].message.content
+                except Exception as e:
+                    answer = str(e)
+            st.write(answer)
         st.session_state.message_history.append({"role": "assistant", "content": answer})
