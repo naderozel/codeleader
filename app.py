@@ -98,6 +98,7 @@ Groq_model = "openai/gpt-oss-120b"
 def get_client():
     return Groq(api_key=st.secrets["GROQ_API_KEY"])
 
+
 client = get_client()
 
 
@@ -160,12 +161,11 @@ if audio_input:
                 tmp_file.write(audio_input.read())
                 tmp_file_path = tmp_file.name
             try:
-                with open(tmp_file_path, "rb") as audio_file:
-                     transcript = client.audio.transcriptions.create(
-                        model="whisper-large-v3-turbo",
-                        file=open(tmp_file_path, "rb"),  # open the file in binary mode
-                        response_format="text"
-)
+                transcript = client.audio.transcriptions.create(
+                    model="openai/whisper-1",
+                    file=tmp_file_path
+                ).text
+                
 
             finally:
                 os.unlink(tmp_file_path)
